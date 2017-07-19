@@ -73,17 +73,21 @@ namespace voice2text
 
         private Thread session_monitor;
 
-        public void StartSession()
+        private Thread msc_audiofile;
+
+        private string outputPath = "";
+
+        private void StartSession()
         {
 
             msc = new MSCAction();
-
-            msc.UploadData(@"C:\Users\admin\Desktop\xunfei\abnf\gm_continuous_digit.abnf");
 
             msc.SessionBegin(null);
 
             audio = new AudioAction();
             audio.init(msc);
+
+            outputPath = audio.outputPath; //获取本次文件地址
 
             //录音，上传
             audio_record = new Thread(new ThreadStart(audio.StartRecordingHandler));
@@ -100,7 +104,9 @@ namespace voice2text
 
         }
 
-        public void StopSession()
+        
+
+        private void StopSession()
         {
 
             audio_record.Abort();
@@ -108,40 +114,56 @@ namespace voice2text
 
             audio.StopRecording();
             msc.SessionEnd();
-            MSCDll.MSPLogout();
+        //    MSCDll.MSPLogout();
 
             audio = null;
             msc = null;
 
+            Console.WriteLine("再次验证开始！"); 
+            //StartSessionAgain();
+
+            ASR();
 
         }
 
-
-        public void test()
+        private void StartSessionAgain()
         {
             msc = new MSCAction();
-
-            int ret = MSCDll.MSPLogin(null, null, "appid=5964bde1");
-            if (ret == 0) Console.WriteLine(Util.getNowTime() + " 讯飞语音会话登录成功！");
-            else throw new Exception("MSPLogin失败 errCode=" + ret);
-
-
-            msc.UploadData(@"C:\Users\admin\Desktop\xunfei\abnf\city.abnf");
-
             msc.SessionBegin(null);
+            msc.SetINFILE(outputPath);
 
-
-            audio_record = new Thread(new ThreadStart(msc.AudioWrite));
-            audio_record.Start();
-            //    msc.AudioWrite();
+            msc_audiofile = new Thread(new ThreadStart(msc.AudioWriteFile));
+            msc_audiofile.Start();
 
             //获取结果
             msc_result = new Thread(new ThreadStart(msc.getResultHandler));
             msc_result.Start();
 
-            //   session_monitor = new Thread(new ThreadStart(SessionMonitor));
+        }
 
-            //    session_monitor.Start();
+        public void ASR()
+        {
+            msc = new MSCAction();
+
+        /*    int ret = MSCDll.MSPLogin(null, null, "appid=5964bde1");
+            if (ret == 0) Console.WriteLine(Util.getNowTime() + " 讯飞语音会话登录成功！");
+            else throw new Exception("MSPLogin失败 errCode=" + ret);
+*/
+
+            msc.UploadData(@"C:\Users\admin\Desktop\xunfei\abnf\keynumber2.abnf");
+
+            string param = "sub = asr, result_type = plain, sample_rate = 16000,aue = speex-wb,ent=sms16k";
+            msc.SessionBegin(param);
+            msc.SetINFILE(outputPath);
+
+            audio_record = new Thread(new ThreadStart(msc.AudioWriteFile));
+            audio_record.Start();
+ 
+
+            //获取结果
+            msc_result = new Thread(new ThreadStart(msc.getResultHandler));
+            msc_result.Start();
+
         }
     }
 }

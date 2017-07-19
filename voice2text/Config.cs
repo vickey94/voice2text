@@ -11,23 +11,26 @@ namespace voice2text
         /// <summary>
         ///  MSPLogin 登录 appid 参数
         /// </summary>
-        public readonly string PARAMS_LOGIN = "appid=5964bde1";
+        public static readonly string PARAMS_LOGIN = "appid=5964bde1";
 
 
         /// <summary>
         /// SessionBegin 
         /// </summary>
-        public readonly string PARAMS_SESSION = "sub=iat,rate=16000,ent=sms16k,rst=plain,vad_eos=5000,plain = gb2312,aue = speex-wb";
+        public static readonly string PARAMS_SESSION = "sub=iat,ptt = 0, rate=16000,ent=sms16k,rst=plain,vad_eos=5000,plain = gb2312,aue = speex-wb";
         /// "sub = asr, result_type = plain, result_encoding = gb2312,sample_rate = 16000,aue = speex-wb,ent=sms16k";
+        /// 
+
+        public static readonly string grammarList = string.Empty;
 
         /// <summary>
         /// 文件输出文件夹
         /// </summary>
-        public readonly string outputFolder = "F:";
+        public static readonly string outputFolder = "F:";
 
         /// <summary>
         /// 上传语音文件地址
         /// </summary>
-        public readonly string uploadDataFile = "";
+        public static readonly string uploadDataFile = "";
     }
 }

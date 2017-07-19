@@ -21,7 +21,9 @@ namespace voice2text.action
         private WaveFileWriter waveWriter;  //数据输出流
                                             // private byte[] temp_waveBuffer;
         private readonly string outputFolder = "F:";
-        private string outputFile;
+
+
+        public string outputPath;
 
         private const int Recording_BUFFER_NUM = 3200;
 
@@ -45,8 +47,8 @@ namespace voice2text.action
             this.msc = msc;
 
             string outputFilename = Util.getNowTime() + ".wav";
-            string outputPath = Path.Combine(outputFolder, outputFilename);
-            outputFile = outputPath;
+            outputPath = Path.Combine(outputFolder, outputFilename);
+
 
             waveIn = new WaveInEvent();
             waveIn.WaveFormat = new WaveFormat(16000, 16, 1); //

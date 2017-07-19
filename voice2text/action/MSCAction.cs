@@ -66,14 +66,12 @@ namespace voice2text.action
         /// <param name="param">本次会话参数param = "sub=iat,rate=16000,ent=sms16k,rst=plain,vad_eos=5000";</param>
         public void SessionBegin(string param)
         {
-            //   if (param == null) param = "sub=iat,rate=16000,ent=sms16k,rst=plain,vad_eos=5000,plain = gb2312,aue = speex-wb";
-            //   if (param == null) param = "sub = iat, domain = iat, language = zh_cn, rate=16000,ent=sms16k,rst=plain,vad_eos=10000";
-            // if (param == null) param = "sub = asr, aue = speex-wb ,domain = asr, language = zh_cn, rate = 16000,ent = sms16k,rst = plain,vad_eos = 10000,plain = utf-8 ";
-            if (param == null) param = "sub = asr, result_type = plain, result_encoding = gb2312,sample_rate = 16000,aue = speex-wb,ent=sms16k";
+            if (param == null) param = Config.PARAMS_SESSION;
 
-            // grammerid = string.Empty;
+          //  grammerid = string.Empty;
+
             int ret = 0;
-            //"bccf81ef87f02f1a926b256e5f6aa6e2"
+
             ///第二个参数为传递的参数，使用会话模式，使用speex编解码，使用16k16bit的音频数据
             ///第三个参数为返回码
             sess_id = Util.Ptr2Str(MSCDll.QISRSessionBegin(grammerid, param, ref ret));
@@ -103,13 +101,19 @@ namespace voice2text.action
 
         }
 
+
+        private string inFile = "";
+        public void SetINFILE(string inFile)
+        {
+            this.inFile = inFile;
+        }
         /// <summary>
         /// 输入音频文件，将数据传到服务器,需要一个线程
         /// </summary>
         /// <param name="inFile">音频文件，pcm无文件头，采样率16k，数据16位，单声道</param>
-        public void AudioWrite()
+        public void AudioWriteFile()
         {
-            string inFile = @"C:\Users\admin\Desktop\xunfei\wav\city.wav";
+          //  string inFile = @"C:\Users\admin\Desktop\xunfei\wav\city.wav";
 
             int ret = 0;
 
@@ -153,7 +157,7 @@ namespace voice2text.action
                     Console.WriteLine(Util.getNowTime() + " 检测到音频的后端点，后继的音频会被MSC忽略 ep_status is " + ep_status);
                     break;
                 }
-                Thread.Sleep(1000);
+                Thread.Sleep(100);
             }
             fp.Close();
             ///最后一块数据

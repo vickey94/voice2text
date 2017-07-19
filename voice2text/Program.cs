@@ -10,6 +10,9 @@ namespace voice2text
     {
         static void Main(string[] args)
         {
+
+            ActionListener AL = new ActionListener();
+             AL.Monitor();
         }
     }
 }
