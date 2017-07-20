@@ -54,27 +54,36 @@ namespace voice2text.action
         private int rec_status = -1;
         private int rslt_status = -1;
 
+  
+
         /// <summary>
         /// 用于获取当前服务器返回的所有结果
         /// </summary>
         private string nowResult = "";
 
+        /// <summary>
+        /// 上传语法后的获取的唯一grammarList，下次可以直接使用,开发阶段，语法常常更换，所以每次都上传，后面则改为固定调用。
+        /// </summary>
+        private string grammarList = null;
+
+        /// <summary>
+        /// 输入文件地址
+        /// </summary>
+        private string inFile = "";
 
         /// <summary>
         /// 开启Session
         /// </summary>
         /// <param name="param">本次会话参数param = "sub=iat,rate=16000,ent=sms16k,rst=plain,vad_eos=5000";</param>
-        public void SessionBegin(string param)
+        public void SessionBegin(string grammarList ,string param)
         {
-            if (param == null) param = Config.PARAMS_SESSION;
-
-          //  grammerid = string.Empty;
+            if (param == null) throw new Exception("请输入sessionBegin param");
 
             int ret = 0;
 
             ///第二个参数为传递的参数，使用会话模式，使用speex编解码，使用16k16bit的音频数据
             ///第三个参数为返回码
-            sess_id = Util.Ptr2Str(MSCDll.QISRSessionBegin(grammerid, param, ref ret));
+            sess_id = Util.Ptr2Str(MSCDll.QISRSessionBegin(grammarList, param, ref ret));
             if (ret != 0) throw new Exception("QISRSessionBegin失败 errCode=" + ret);
 
             Console.WriteLine(Util.getNowTime() + " 本次语音识别会话开始！");
@@ -101,16 +110,12 @@ namespace voice2text.action
 
         }
 
-
-        private string inFile = "";
-        public void SetINFILE(string inFile)
-        {
-            this.inFile = inFile;
-        }
+  
         /// <summary>
         /// 输入音频文件，将数据传到服务器,需要一个线程
+        /// 输入前调用setINFILE方法把文件地址传入
         /// </summary>
-        /// <param name="inFile">音频文件，pcm无文件头，采样率16k，数据16位，单声道</param>
+        //<param name="inFile">音频文件，pcm无文件头，采样率16k，数据16位，单声道</param>
         public void AudioWriteFile()
         {
           //  string inFile = @"C:\Users\admin\Desktop\xunfei\wav\city.wav";
@@ -165,15 +170,9 @@ namespace voice2text.action
 
             Marshal.FreeHGlobal(bp);
 
-            Console.WriteLine("文件上传完毕 ep_status is " + ep_status);
+            Console.WriteLine(Util.getNowTime()+" 文件上传完毕 ep_status is " + ep_status);
         }
 
-
-
-        public String getNowResult()
-        {
-            return nowResult;
-        }
 
 
         /// <summary>
@@ -188,16 +187,28 @@ namespace voice2text.action
             {
                 Thread.Sleep(500);
 
-                ///进行状态判断
-                ///识别成功，有识别结果返回 ;识别结束，有识别结果返回 ; 识别成功，有识别结果返回; 
-                //   if (rec_status == 0 || rec_status == 5 || rslt_status == 0)
-                //   {
-                nowResult += getResult();
+                ///识别中
+                if (rec_status == 2 || rslt_status == 2)
+                {
+                    continue;
+                }
 
-                //  }
+                ///识别结束，有识别结果返回
+                if (rslt_status == 5)
+                {
+                    nowResult += getResult();
+                    Console.WriteLine(Util.getNowTime() + "  识别结束，识别结果:" + nowResult + " 音频流ep_status is " + ep_status + " rec_status is " + rec_status + " rslt_status is " + rslt_status);
+                    break;
+                }
+                ///识别结束，没有识别结果
+                if (rec_status == 1 || rslt_status == 1)
+                {
+                    Console.WriteLine(Util.getNowTime() + " 识别结束，没有识别结果:" + nowResult + " 音频流ep_status is " + ep_status + " rec_status is " + rec_status + " rslt_status is " + rslt_status);
+                    break;
+                }
 
+                nowResult += getResult();             
                 Console.WriteLine(Util.getNowTime() + " 当前结果为:" + nowResult + " 音频流ep_status is " + ep_status + " rec_status is " + rec_status + " rslt_status is " + rslt_status);
-
 
             }
 
@@ -213,7 +224,6 @@ namespace voice2text.action
             if (p != IntPtr.Zero)
             {
                 result = Util.Ptr2Str(p);
-                //    Console.WriteLine(Util.getNowTime() + " 返回部分结果:" + result);
             }
 
             if (ret != 0)
@@ -237,13 +247,10 @@ namespace voice2text.action
 
         }
 
-        public int getNowEp_status()
-        {
-            return ep_status;
-        }
-
-        string grammerid = null;
-
+        /// <summary>
+        /// 上传语法文件，由于要上传完成后才能使用语法，所以这里为阻塞
+        /// </summary>
+        /// <param name="inFile"></param>
         public void UploadData(string inFile)
         {
             string dataName = "keyword";
@@ -269,10 +276,20 @@ namespace voice2text.action
             string result = Util.Ptr2Str(MSCDll.MSPUploadData(dataName, bp, (uint)dataLen, param, ref ret));
             if (ret != 0) Console.WriteLine("ret is " + ret);
 
-            grammerid = result;
+            grammarList = result;
             Console.WriteLine("上传结果为：" + result);
 
         }
+
+        public int getNowEp_status() { return ep_status; }
+
+        public int getNow_rslt_status() { return rslt_status; }
+
+        public String getNowResult() { return nowResult; }
+
+        public String getGrammarList_temp() { return grammarList; }
+
+        public void SetINFILE(string inFile) {  this.inFile = inFile;       }
     }
 
 }

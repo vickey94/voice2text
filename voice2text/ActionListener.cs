@@ -14,75 +14,107 @@ namespace voice2text
 
         private AudioAction audio;
         private MSCAction msc;
+
+        private Thread audio_record;
+
+        private Thread msc_result;
+
+
+        ///用于监控，结束另外2个线程
+        private Thread session_monitor;
+
         /// <summary>
         /// 主监控，控制指令识别开始
         /// </summary>
         public void Monitor()
         {
 
-            //使用其他接口前必须先调用MSPLogin，可以在应用程序启动时调用。
-            int ret = MSCDll.MSPLogin(null, null, "appid=5964bde1");
-            if (ret == 0) Console.WriteLine(Util.getNowTime() + " 讯飞语音会话登录成功！");
-            else throw new Exception("MSPLogin失败 errCode=" + ret);
 
-            StartSession();
+            MSPLogin();
+
+            ///捕获到条件，开始传送数据
+            if (true)
+            {
+                ///开启
+                StartSession_IAT();
+
+                ///开启监控本次Session结束
+                session_monitor = new Thread(new ThreadStart(SessionMonitor));
+                session_monitor.Start();
+            }
+             
 
 
         }
 
         /// <summary>
-        /// 用于结束本次会话
+        /// 用于结束本次会话，同时让主线程继续循环
         /// </summary>
         public void SessionMonitor()
         {
 
+            
             while (true)
             {
-                Thread.Sleep(1000); //每1000ms监控一次 ，这里要注意，防止数据还未获取完就结束线程！
+                Thread.Sleep(500); //每1000ms监控一次 ，这里要注意，防止数据还未获取完就结束线程！
                 string res = msc.getNowResult();
 
-                Console.WriteLine(Util.getNowTime() + " 获取结果：" + res);
+             //   Console.WriteLine(Util.getNowTime() + " 获取结果：" + res);
                 int status = msc.getNowEp_status();
-                if (status == 3)
+
+                if (msc != null && audio != null)
                 {
+                    if (status == 3)
+                    {
 
-                    StopSession();
-                    Console.WriteLine(Util.getNowTime() + " 端点结束" + res);
-                    Console.ReadKey();
+                        StopSession_IAT();
+                        Console.WriteLine(Util.getNowTime() + " 端点结束" + res);
+
+                        Console.WriteLine("再次验证开始！");
+                        StartSession_ASR();
+
+
+                    }
+
+                    if (res.Length > 10)
+                    {
+                        StopSession_IAT();
+
+                        Console.WriteLine(Util.getNowTime() + " 输入数据值达到上限，结束本次会话，最后结果为：" + res);
+
+                        Console.WriteLine("再次验证开始！");
+                        StartSession_ASR();
+
+
+                        //  Thread.Sleep(100000);
+
+
+                    }
                 }
-
-                if (res.Length > 10)
+                if(msc != null && audio == null)
                 {
-                    StopSession();
-
-                    Console.WriteLine(Util.getNowTime() + " 输入数据值达到上限，结束本次会话，最后结果为：" + res);
-                    Console.ReadKey();
-                    //  Thread.Sleep(100000);
-
+                    if (false)
+                    {
+                        StopSession_ASR();
+                    }
                 }
-
 
             }
 
 
         }
 
-        private Thread audio_record;
 
-        private Thread msc_result;
 
-        private Thread session_monitor;
-
-        private Thread msc_audiofile;
-
+    
         private string outputPath = "";
 
-        private void StartSession()
+        private void StartSession_IAT()
         {
 
             msc = new MSCAction();
 
-            msc.SessionBegin(null);
+            msc.SessionBegin(null,Config.PARAMS_SESSION_IAT);
 
             audio = new AudioAction();
             audio.init(msc);
@@ -95,18 +127,17 @@ namespace voice2text
             //获取结果
             msc_result = new Thread(new ThreadStart(msc.getResultHandler));
 
-            //用于监控，结束另外2个线程
-            session_monitor = new Thread(new ThreadStart(SessionMonitor));
+      
 
             audio_record.Start();
             msc_result.Start();
-            session_monitor.Start();
+          
 
         }
 
         
 
-        private void StopSession()
+        private void StopSession_IAT()
         {
 
             audio_record.Abort();
@@ -119,51 +150,59 @@ namespace voice2text
             audio = null;
             msc = null;
 
-            Console.WriteLine("再次验证开始！"); 
-            //StartSessionAgain();
-
-            ASR();
-
         }
 
-        private void StartSessionAgain()
+
+
+        /// <summary>
+        /// 语法验证是直接传入之前的音频文件，不需要录音,
+        /// </summary>
+        public void StartSession_ASR()
         {
             msc = new MSCAction();
-            msc.SessionBegin(null);
-            msc.SetINFILE(outputPath);
-
-            msc_audiofile = new Thread(new ThreadStart(msc.AudioWriteFile));
-            msc_audiofile.Start();
-
-            //获取结果
-            msc_result = new Thread(new ThreadStart(msc.getResultHandler));
-            msc_result.Start();
-
-        }
-
-        public void ASR()
-        {
-            msc = new MSCAction();
-
-        /*    int ret = MSCDll.MSPLogin(null, null, "appid=5964bde1");
-            if (ret == 0) Console.WriteLine(Util.getNowTime() + " 讯飞语音会话登录成功！");
-            else throw new Exception("MSPLogin失败 errCode=" + ret);
-*/
 
             msc.UploadData(@"C:\Users\admin\Desktop\xunfei\abnf\keynumber2.abnf");
 
-            string param = "sub = asr, result_type = plain, sample_rate = 16000,aue = speex-wb,ent=sms16k";
-            msc.SessionBegin(param);
-            msc.SetINFILE(outputPath);
+          //  string param = "sub = asr, result_type = plain, sample_rate = 16000,aue = speex-wb,ent=sms16k";
+            msc.SessionBegin(msc.getGrammarList_temp(),Config.PARAMS_SESSION_ASR);
 
+            ///设置文件地址
+            msc.SetINFILE(outputPath);
+            
+            ///这里只是用了audio_record的线程名称
             audio_record = new Thread(new ThreadStart(msc.AudioWriteFile));
             audio_record.Start();
  
 
-            //获取结果
+            ///获取结果
             msc_result = new Thread(new ThreadStart(msc.getResultHandler));
             msc_result.Start();
 
+        }
+
+        private void StopSession_ASR()
+        {
+
+            audio_record.Abort();
+            msc_result.Abort();
+
+         
+            msc.SessionEnd();
+            MSCDll.MSPLogout();
+  
+            msc = null;
+
+        }
+
+        /// <summary>
+        /// 全局监控开始调用登录
+        /// </summary>
+        private void MSPLogin()
+        {
+            //使用其他接口前必须先调用MSPLogin，可以在应用程序启动时调用。
+            int ret = MSCDll.MSPLogin(null, null, Config.PARAMS_LOGIN);
+            if (ret == 0) Console.WriteLine(Util.getNowTime() + " 讯飞语音会话登录成功！");
+            else throw new Exception("MSPLogin失败 errCode=" + ret);
         }
     }
 }

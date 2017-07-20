@@ -16,11 +16,11 @@ namespace voice2text.action
         /// <summary>
         /// MSCAction主要实现向服务器实时传送数据，
         /// </summary>
-        private MSCAction msc;
+        private MSCAction msc = null;
         private IWaveIn waveIn { get; set; }        //
         private WaveFileWriter waveWriter;  //数据输出流
                                             // private byte[] temp_waveBuffer;
-        private readonly string outputFolder = "F:";
+    //    private readonly string outputFolder = "D:";
 
 
         public string outputPath;
@@ -40,14 +40,14 @@ namespace voice2text.action
         }
 
         /// <summary>
-        /// 设置本次参数，传递MSC
+        /// 设置本次参数，传递MSC,如果为NULL，则只为录音
         /// </summary>
         public void init(MSCAction msc)
         {
             this.msc = msc;
 
             string outputFilename = Util.getNowTime() + ".wav";
-            outputPath = Path.Combine(outputFolder, outputFilename);
+            outputPath = Path.Combine(Config.outputFolder, outputFilename);
 
 
             waveIn = new WaveInEvent();
@@ -81,7 +81,7 @@ namespace voice2text.action
             byte[] temp_waveBuffer = e.Buffer;
 
             waveWriter.Write(temp_waveBuffer, 0, e.BytesRecorded);
-            msc.AudioWrite(temp_waveBuffer);
+            if (msc != null)  msc.AudioWrite(temp_waveBuffer);
 
             //  int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);//录音时间获取 
         }
