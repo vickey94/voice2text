@@ -1,0 +1,12 @@
+#ABNF 1.0 UTF-8;
+language zh-CN; 
+mode voice;
+
+root $main;
+$main =[$first] $number ;
+
+$first = 计工 | 信息 | 安全 ;
+$number =  
+14416 |
+78821 | 
+32145 ;

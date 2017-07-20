@@ -89,6 +89,8 @@
     <Content Include="dll\msc.dll" />
     <Content Include="dll\msc_x64.dll" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="res\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
