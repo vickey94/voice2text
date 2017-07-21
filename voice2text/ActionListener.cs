@@ -47,6 +47,10 @@ namespace voice2text
 
         }
 
+        ~ActionListener()
+        {
+            MSCDll.MSPLogout();
+        }
         /// <summary>
         /// 用于结束本次会话，同时让主线程继续循环
         /// </summary>
@@ -196,7 +200,7 @@ namespace voice2text
 
          
             msc.SessionEnd();
-            MSCDll.MSPLogout();
+           
   
             msc = null;
 

@@ -52,7 +52,7 @@ namespace voice2text.action
 
             waveWriter = new WaveFileWriter(outputPath, waveIn.WaveFormat);
             waveIn.DataAvailable += OnDataAvailable;
-
+            
             //这个地方可以重写stop,但我们的只要waveIn.Dispose()关闭清空数据就可以，所有并没有重写
             //waveIn.RecordingStopped += OnRecordingStopped; 
         }
@@ -69,6 +69,7 @@ namespace voice2text.action
             Console.WriteLine("正在录音......");
         }
 
+        public float volume = 0.0f;
         ///<summary>
         ///录音数据输出
         ///</summary>
@@ -79,6 +80,19 @@ namespace voice2text.action
 
             waveWriter.Write(temp_waveBuffer, 0, e.BytesRecorded);
             if (msc != null)  msc.AudioWrite(temp_waveBuffer);
+
+
+            ///
+
+            long sh = System.BitConverter.ToInt64(temp_waveBuffer, 0);
+            //if (sh > this.maxvol) { this.maxvol = sh; }
+            //if (sh < this.minvol) { this.minvol = sh; }
+            long width = (long)Math.Pow(2, 50);
+            float svolume = Math.Abs(sh / width);
+            if (svolume > 1500.0f) { svolume = 1500.0f; }
+            if (svolume < 50.0f) { svolume = 50.0f; }
+            this.volume = svolume / 15.0f;
+            System.Console.WriteLine(string.Format("{0}", this.volume));
 
             //  int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);//录音时间获取 
         }

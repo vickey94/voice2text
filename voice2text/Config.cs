@@ -35,7 +35,7 @@ namespace voice2text
         /// <summary>
         /// 文件输出文件夹
         /// </summary>
-        public static readonly string outputFolder = "F:";
+        public static readonly string outputFolder = "D:";
 
         /// <summary>
         /// 上传语音文件地址
