@@ -1,10 +1,6 @@
 ﻿using NAudio.Wave;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace voice2text.action
 {
@@ -37,6 +33,7 @@ namespace voice2text.action
             IWavePlayer player = new WaveOut(WaveCallbackInfo.FunctionCallback());
             player.Init(audio);
             player.Play();
+     
         }
 
         /// <summary>
@@ -77,7 +74,7 @@ namespace voice2text.action
         ///</summary>
         private void OnDataAvailable(object sender, WaveInEventArgs e)
         {
-
+            
             byte[] temp_waveBuffer = e.Buffer;
 
             waveWriter.Write(temp_waveBuffer, 0, e.BytesRecorded);
