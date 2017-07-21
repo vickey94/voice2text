@@ -41,5 +41,7 @@ namespace voice2text
         /// 上传语音文件地址
         /// </summary>
         public static readonly string uploadDataFile = "";
+
+        public static  bool start = false;
     }
 }

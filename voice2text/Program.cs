@@ -14,8 +14,9 @@ namespace voice2text
         {
 
               ActionListener AL = new ActionListener();
-                AL.Monitor();
-       
+              AL.Monitor();
+        //    AL.VoiceMonitor();
+        //    Console.ReadKey();
 
 
         }
