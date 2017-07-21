@@ -287,6 +287,7 @@ namespace voice2text.action
 
             grammarList = result;
             Console.WriteLine("上传结果为：" + result);
+            fp.Close();
 
         }
 

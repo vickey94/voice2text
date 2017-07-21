@@ -29,7 +29,7 @@ namespace voice2text
 
 
         private Thread voice_monitor;
-      //  AudioAction vMonitor;
+        AudioAction vMonitor;
         /// <summary>
         /// 主监控，控制指令识别开始
         /// </summary>
@@ -40,28 +40,30 @@ namespace voice2text
             MSPLogin();
 
 
-       //     VoiceMonitor();
+            VoiceMonitor();
 
             ///捕获到条件，开始传送数据
             while (true)
             {
 
-             //   Thread.Sleep(50);
-             //   Console.WriteLine(voice_monitor.IsAlive);
-            //    if (Config.start)
+                Thread.Sleep(10);
+              
+                //   Console.WriteLine(Config.start);
+                if (Config.start)
                 {
-            //        Config.start = false;
-                  //  voice_monitor;
-            //        vMonitor = null;
+                    vMonitor.StopMonitoring();
+                    Config.start = false;
+
+                  
 
                     ///开启
                     StartSession_IAT();
 
                     ///开启监控本次Session结束
-            //        session_monitor = new Thread(new ThreadStart(SessionMonitor));
-             //       session_monitor.Start();
+                    session_monitor = new Thread(new ThreadStart(SessionMonitor));
+                    session_monitor.Start();
                 }
-            }
+           }
        
              
 
@@ -70,10 +72,10 @@ namespace voice2text
 
         ~ActionListener()
         {
-    //        MSCDll.MSPLogout();
+            MSCDll.MSPLogout();
         }
 
-  /*      public void VoiceMonitor()
+        public void VoiceMonitor()
         {
             vMonitor = vMonitor = new AudioAction();
             vMonitor.initMonitor();
@@ -82,7 +84,7 @@ namespace voice2text
 
             voice_monitor.Start();
           
-    }*/
+    }
 
         /// <summary>
         /// 用于结束本次会话，同时让主线程继续循环
@@ -135,9 +137,10 @@ namespace voice2text
                         Console.WriteLine("再次验证结束！");
                         StopSession_ASR();
 
-                        Thread.Sleep(500);
+                   
              
                         Thread.Sleep(200);
+                        VoiceMonitor();
                         session_monitor.Abort();///结束本身线程
 
 
@@ -159,7 +162,6 @@ namespace voice2text
 
             msc = new MSCAction();
 
-    
 
             msc.SessionBegin(null,Config.PARAMS_SESSION_IAT);
 

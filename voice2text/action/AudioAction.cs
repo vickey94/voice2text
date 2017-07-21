@@ -108,7 +108,7 @@ namespace voice2text.action
             Console.WriteLine(Util.getNowTime() + " 录音结束");
         }
 
-        /*
+        
         private IWaveIn waveMonitor;
         public float volume = 0.0f;
 
@@ -162,8 +162,20 @@ namespace voice2text.action
            //   int secondsRecorded = (int)(waveWriter.Length / waveWriter.WaveFormat.AverageBytesPerSecond);//录音时间获取 
         }
 
-      
-    */
+        public void StopMonitoring()
+        {
+
+            if (waveMonitor != null) // 关闭录音对象
+            {
+                waveMonitor.Dispose();
+                waveMonitor = null;
+            }
+   
+            Console.WriteLine(Util.getNowTime() + " 录音结束");
+        }
+
+
+
 
     }
 }
