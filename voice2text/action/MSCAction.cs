@@ -62,6 +62,11 @@ namespace voice2text.action
         private string nowResult = "";
 
         /// <summary>
+        /// 结果获取结束后，将状态置为 1,Listener监听到为1时，结束本次所有线程
+        /// </summary>
+        private int nowResultStatus = 0;
+
+        /// <summary>
         /// 上传语法后的获取的唯一grammarList，下次可以直接使用,开发阶段，语法常常更换，所以每次都上传，后面则改为固定调用。
         /// </summary>
         private string grammarList = null;
@@ -157,7 +162,7 @@ namespace voice2text.action
                     throw new Exception("QISRAudioWrite err,errCode=" + ret);
                 }
 
-                if (ep_status >= 3)
+                if (ep_status == 3)
                 {
                     Console.WriteLine(Util.getNowTime() + " 检测到音频的后端点，后继的音频会被MSC忽略 ep_status is " + ep_status);
                     break;
@@ -175,6 +180,7 @@ namespace voice2text.action
 
 
 
+        
         /// <summary>
         /// 获取识别结果 需要一个线程
         /// 线程循环获取时，先判断是否等于rec_status = 0; 或 rslt_status = 0，如果是，则进行获取，如果rslt_status值为5，则结束获取。
@@ -187,23 +193,26 @@ namespace voice2text.action
             {
                 Thread.Sleep(500);
 
-                ///识别中
-                if (rec_status == 2 || rslt_status == 2)
+                ///识别中 这里必须进行一次识别才能获取结果状态，如果直接continue,状态会一直为2
+              /* if (rec_status == 2 && rslt_status == 2)
                 {
+                    Console.WriteLine(Util.getNowTime() + "  识别中:" + nowResult + " 音频流ep_status is " + ep_status + " rec_status is " + rec_status + " rslt_status is " + rslt_status);
                     continue;
-                }
+                }*/
 
                 ///识别结束，有识别结果返回
                 if (rslt_status == 5)
                 {
                     nowResult += getResult();
                     Console.WriteLine(Util.getNowTime() + "  识别结束，识别结果:" + nowResult + " 音频流ep_status is " + ep_status + " rec_status is " + rec_status + " rslt_status is " + rslt_status);
+                    nowResultStatus = 1;
                     break;
                 }
                 ///识别结束，没有识别结果
                 if (rec_status == 1 || rslt_status == 1)
                 {
                     Console.WriteLine(Util.getNowTime() + " 识别结束，没有识别结果:" + nowResult + " 音频流ep_status is " + ep_status + " rec_status is " + rec_status + " rslt_status is " + rslt_status);
+                    nowResultStatus = 1;
                     break;
                 }
 
@@ -284,6 +293,8 @@ namespace voice2text.action
         public int getNowEp_status() { return ep_status; }
 
         public int getNow_rslt_status() { return rslt_status; }
+
+        public int getNowResultStatus() { return nowResultStatus; }
 
         public String getNowResult() { return nowResult; }
 

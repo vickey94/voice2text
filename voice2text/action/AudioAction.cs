@@ -47,8 +47,8 @@ namespace voice2text.action
             this.msc = msc;
 
             string outputFilename = Util.getNowTime() + ".wav";
-            outputPath = Path.Combine(Config.outputFolder, outputFilename);
-
+           // outputPath = Path.Combine(Config.outputFolder, outputFilename);
+            outputPath = Config.outputFolder + "\\" + outputFilename;
 
             waveIn = new WaveInEvent();
             waveIn.WaveFormat = new WaveFormat(16000, 16, 1); //

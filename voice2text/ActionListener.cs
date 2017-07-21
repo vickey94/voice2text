@@ -93,9 +93,15 @@ namespace voice2text
                 }
                 if(msc != null && audio == null)
                 {
-                    if (false)
+                    if (msc.getNowResultStatus() == 1)
                     {
+                        Console.WriteLine("再次验证结束！");
                         StopSession_ASR();
+
+                        Thread.Sleep(10000);
+                        session_monitor.Abort();///结束本身线程
+
+
                     }
                 }
 
@@ -163,9 +169,11 @@ namespace voice2text
 
             msc.UploadData(@"C:\Users\admin\Desktop\xunfei\abnf\keynumber2.abnf");
 
+            Console.WriteLine("msc.getGrammarList_temp() is "+ msc.getGrammarList_temp());
           //  string param = "sub = asr, result_type = plain, sample_rate = 16000,aue = speex-wb,ent=sms16k";
             msc.SessionBegin(msc.getGrammarList_temp(),Config.PARAMS_SESSION_ASR);
 
+            Console.WriteLine("文件地址为："+ outputPath);
             ///设置文件地址
             msc.SetINFILE(outputPath);
             
