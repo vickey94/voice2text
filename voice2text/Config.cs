@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -42,6 +43,22 @@ namespace voice2text
         /// </summary>
         public static readonly string uploadDataFile = "";
 
-        public static  bool start = false;
+        public static  bool isSpeeking = false;
+
+
+      /*       public static ArrayList advDataList = null;
+
+              public static void setAdvData(byte[] temp)
+              {
+                  if (advDataList == null) advDataList = new ArrayList();
+
+                  if (advDataList.Count > 1) advDataList.Remove(0);
+
+                  advDataList.Add(temp);
+
+              }
+*/
+        public static byte[] advData1 = null;
+        public static byte[] advData2 = null;
     }
 }

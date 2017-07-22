@@ -17,7 +17,7 @@ namespace voice2text
 
 
 
-        private Thread audio_record;
+        private Thread msc_Uploadfile;
 
         private Thread msc_result;
 
@@ -28,7 +28,7 @@ namespace voice2text
 
 
 
-        private Thread voice_monitor;
+      
         AudioAction vMonitor;
         /// <summary>
         /// 主监控，控制指令识别开始
@@ -42,6 +42,8 @@ namespace voice2text
 
             VoiceMonitor();
 
+           
+
             ///捕获到条件，开始传送数据
             while (true)
             {
@@ -49,10 +51,11 @@ namespace voice2text
                 Thread.Sleep(10);
               
                 //   Console.WriteLine(Config.start);
-                if (Config.start)
+                if (Config.isSpeeking)
                 {
                     vMonitor.StopMonitoring();
-                    Config.start = false;
+                    //    vMonitor.StopMonitoring();
+                    Config.isSpeeking = false;
 
                   
 
@@ -79,13 +82,14 @@ namespace voice2text
         {
             vMonitor = vMonitor = new AudioAction();
             vMonitor.initMonitor();
+            vMonitor.StartMonitoringHandler();
 
-            voice_monitor = new Thread(new ThreadStart(vMonitor.StartMonitoringHandler));
+         //   voice_monitor = new Thread(new ThreadStart(vMonitor.StartMonitoringHandler));
 
-            voice_monitor.Start();
+         //   voice_monitor.Start();
           
     }
-
+        string res;
         /// <summary>
         /// 用于结束本次会话，同时让主线程继续循环
         /// </summary>
@@ -96,7 +100,8 @@ namespace voice2text
             while (true)
             {
                 Thread.Sleep(500); //每1000ms监控一次 ，这里要注意，防止数据还未获取完就结束线程！
-                string res = msc.getNowResult();
+                if(msc!=null)
+                res = msc.getNowResult();
 
              //   Console.WriteLine(Util.getNowTime() + " 获取结果：" + res);
                 int status = msc.getNowEp_status();
@@ -109,13 +114,18 @@ namespace voice2text
                         StopSession_IAT();
                         Console.WriteLine(Util.getNowTime() + " 端点结束" + res);
 
-                        Console.WriteLine("再次验证开始！");
-                        StartSession_ASR();
+                      
+                        Console.WriteLine("数据不合格！");
+                        //   StartSession_ASR();
 
 
+                        Thread.Sleep(200);
+                        vMonitor.StartMonitoringHandler();
+                        //  VoiceMonitor();
+                        session_monitor.Abort();///结束本身线程
                     }
 
-                    if (res.Length > 10)
+                    if (res.Length > 6)
                     {
                         StopSession_IAT();
 
@@ -140,7 +150,8 @@ namespace voice2text
                    
              
                         Thread.Sleep(200);
-                        VoiceMonitor();
+                        vMonitor.StartMonitoringHandler();
+                        //  VoiceMonitor();
                         session_monitor.Abort();///结束本身线程
 
 
@@ -171,14 +182,15 @@ namespace voice2text
             outputPath = audio.outputPath; //获取本次文件地址
 
             //录音，上传
-            audio_record = new Thread(new ThreadStart(audio.StartRecordingHandler));
+            audio.StartRecordingHandler();
+            //   audio_record = new Thread(new ThreadStart(audio.StartRecordingHandler));
 
             //获取结果
             msc_result = new Thread(new ThreadStart(msc.getResultHandler));
 
       
 
-            audio_record.Start();
+        //    audio_record.Start();
             msc_result.Start();
           
 
@@ -189,7 +201,7 @@ namespace voice2text
         private void StopSession_IAT()
         {
 
-            audio_record.Abort();
+        
             msc_result.Abort();
 
             audio.StopRecording();
@@ -209,8 +221,8 @@ namespace voice2text
         public void StartSession_ASR()
         {
             msc = new MSCAction();
-
-            msc.UploadData(@"C:\Users\admin\Desktop\xunfei\abnf\keynumber2.abnf");
+            msc.UploadData(@"..\res\keynumber2.abnf");
+            //  msc.UploadData(@"C:\Users\admin\Desktop\xunfei\abnf\keynumber2.abnf");
 
             Console.WriteLine("msc.getGrammarList_temp() is "+ msc.getGrammarList_temp());
           //  string param = "sub = asr, result_type = plain, sample_rate = 16000,aue = speex-wb,ent=sms16k";
@@ -219,10 +231,10 @@ namespace voice2text
             Console.WriteLine("文件地址为："+ outputPath);
             ///设置文件地址
             msc.SetINFILE(outputPath);
-            
-            ///这里只是用了audio_record的线程名称
-            audio_record = new Thread(new ThreadStart(msc.AudioWriteFile));
-            audio_record.Start();
+
+          
+            msc_Uploadfile = new Thread(new ThreadStart(msc.AudioWriteFile));
+            msc_Uploadfile.Start();
  
 
             ///获取结果
@@ -234,13 +246,11 @@ namespace voice2text
         private void StopSession_ASR()
         {
 
-            audio_record.Abort();
+            msc_Uploadfile.Abort();
             msc_result.Abort();
-
          
-            msc.SessionEnd();
-           
-  
+            msc.SessionEnd();     
+ 
             msc = null;
 
         }

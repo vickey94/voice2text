@@ -1,6 +1,6 @@
 ﻿using NAudio.Wave;
 using System;
-
+using System.Collections;
 
 namespace voice2text.action
 {
@@ -79,11 +79,46 @@ namespace voice2text.action
         ///</summary>
         private void OnDataAvailable(object sender, WaveInEventArgs e)
         {
-            
-            byte[] temp_waveBuffer = e.Buffer;
+            byte[] temp_waveBuffer = null;
 
-            waveWriter.Write(temp_waveBuffer, 0, e.BytesRecorded);
-            if (msc != null)  msc.AudioWrite(temp_waveBuffer);
+            int length = e.BytesRecorded;
+
+            /*   if (Config.advDataList != null)
+               {
+
+                   for (int i = 0; i < Config.advDataList.Count; i++)
+                   {
+
+                       temp_waveBuffer = (byte[])Config.advDataList[i];
+                          waveWriter.Write(temp_waveBuffer, 0, length);
+                       if (msc != null) msc.AudioWrite(temp_waveBuffer);
+                    
+                   }
+
+                   Config.advDataList = null;
+               }*/
+
+            if (Config.advData1 != null)
+            {
+                Console.WriteLine(Config.advData1 != null);
+
+                   temp_waveBuffer = Config.advData1;
+                   waveWriter.Write(temp_waveBuffer, 0, length);
+                   if (msc != null) msc.AudioWrite(temp_waveBuffer);
+                Config.advData1 = null;
+
+                temp_waveBuffer = Config.advData2;
+                waveWriter.Write(temp_waveBuffer, 0, length);
+                if (msc != null) msc.AudioWrite(temp_waveBuffer);
+                Config.advData2 = null;
+            }
+          
+                temp_waveBuffer = e.Buffer;
+
+                waveWriter.Write(temp_waveBuffer, 0, e.BytesRecorded);
+                if (msc != null) msc.AudioWrite(temp_waveBuffer);
+
+           
 
             //  int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);//录音时间获取 
         }
@@ -109,20 +144,14 @@ namespace voice2text.action
         }
 
         
-        private IWaveIn waveMonitor;
+        public IWaveIn waveMonitor;
         public float volume = 0.0f;
 
         public void initMonitor()
         {
 
-
-            //    string outputFilename = Util.getNowTime() + ".wav";
-            // outputPath = Path.Combine(Config.outputFolder, outputFilename);
-            //  outputPath = Config.outputFolder + "\\" + outputFilename;
-
-            // waveWriter = new WaveFileWriter(outputPath, waveIn.WaveFormat);
             waveMonitor = new WaveInEvent();
-            waveMonitor.WaveFormat = new WaveFormat(32000, 16, 1); //
+            waveMonitor.WaveFormat = new WaveFormat(16000, 16, 1); //
             waveMonitor.DataAvailable += OnDataAvailableMonitor;
 
         }
@@ -132,17 +161,19 @@ namespace voice2text.action
             Console.WriteLine(Util.getNowTime() + " 开始监听环境声音");
 
             waveMonitor.StartRecording();
+         
+
+        }
+       
 
         
-        }
-
         private void OnDataAvailableMonitor(object sender, WaveInEventArgs e)
         {
 
             byte[] temp_waveBuffer = e.Buffer;
-
+          
          //   waveWriter.Write(temp_waveBuffer, 0, e.BytesRecorded);
-      
+
             long sh = System.BitConverter.ToInt64(temp_waveBuffer, 0);
       
             long width = (long)Math.Pow(2, 50);
@@ -151,10 +182,15 @@ namespace voice2text.action
             //   if (svolume < 50.0f) { svolume = 50.0f; }
             //   this.volume = svolume / 15.0f;
             this.volume = svolume;
-            if (volume > 100)
-            {
+
+        //    if(Config.advData1 == null)
+      //      Config.advData1 = temp_waveBuffer;
+            SetAdvData(temp_waveBuffer);
+            //  Config.setAdvData(temp_waveBuffer);
+            if (volume > 300)
+            {             
                 System.Console.WriteLine(Util.getNowTime() + " 监听到较大声音" + string.Format("{0}", this.volume));
-                Config.start = true;
+                Config.isSpeeking = true;
             }
                
 
@@ -164,18 +200,37 @@ namespace voice2text.action
 
         public void StopMonitoring()
         {
+            waveMonitor.StopRecording();
 
+        }
+
+        public void FinshMonitoring()
+        {
             if (waveMonitor != null) // 关闭录音对象
             {
                 waveMonitor.Dispose();
                 waveMonitor = null;
             }
-   
+
             Console.WriteLine(Util.getNowTime() + " 录音结束");
         }
 
 
 
+        private void SetAdvData(byte[] temp)
+        {
+            if (Config.advData2 != null)
+            {
+                Config.advData1 = Config.advData2;
+                Config.advData2 = temp;
+            }
+            else
+            {
+                if (Config.advData1 == null) Config.advData1 = temp;
+                else Config.advData2 = Config.advData1 = temp;
+            }
+        }
+       
 
     }
 }
