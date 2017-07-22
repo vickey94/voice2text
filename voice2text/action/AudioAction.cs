@@ -100,16 +100,17 @@ namespace voice2text.action
 
             if (Config.advData1 != null)
             {
-                Console.WriteLine(Config.advData1 != null);
+                Console.WriteLine("预录音数据传输");
 
                    temp_waveBuffer = Config.advData1;
                    waveWriter.Write(temp_waveBuffer, 0, length);
                    if (msc != null) msc.AudioWrite(temp_waveBuffer);
-                Config.advData1 = null;
 
                 temp_waveBuffer = Config.advData2;
                 waveWriter.Write(temp_waveBuffer, 0, length);
                 if (msc != null) msc.AudioWrite(temp_waveBuffer);
+
+                Config.advData1 = null;
                 Config.advData2 = null;
             }
           
@@ -117,8 +118,6 @@ namespace voice2text.action
 
                 waveWriter.Write(temp_waveBuffer, 0, e.BytesRecorded);
                 if (msc != null) msc.AudioWrite(temp_waveBuffer);
-
-           
 
             //  int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);//录音时间获取 
         }
@@ -131,6 +130,7 @@ namespace voice2text.action
 
             if (waveIn != null) // 关闭录音对象
             {
+                waveIn.StopRecording();
                 waveIn.Dispose();
                 waveIn = null;
             }
@@ -166,13 +166,11 @@ namespace voice2text.action
         }
        
 
-        
         private void OnDataAvailableMonitor(object sender, WaveInEventArgs e)
         {
 
             byte[] temp_waveBuffer = e.Buffer;
           
-         //   waveWriter.Write(temp_waveBuffer, 0, e.BytesRecorded);
 
             long sh = System.BitConverter.ToInt64(temp_waveBuffer, 0);
       
@@ -183,10 +181,8 @@ namespace voice2text.action
             //   this.volume = svolume / 15.0f;
             this.volume = svolume;
 
-        //    if(Config.advData1 == null)
-      //      Config.advData1 = temp_waveBuffer;
             SetAdvData(temp_waveBuffer);
-            //  Config.setAdvData(temp_waveBuffer);
+        
             if (volume > 300)
             {             
                 System.Console.WriteLine(Util.getNowTime() + " 监听到较大声音" + string.Format("{0}", this.volume));
@@ -216,7 +212,10 @@ namespace voice2text.action
         }
 
 
-
+        /// <summary>
+        /// 用于监听时，提前存入数据
+        /// </summary>
+        /// <param name="temp"></param>
         private void SetAdvData(byte[] temp)
         {
             if (Config.advData2 != null)

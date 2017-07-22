@@ -25,11 +25,15 @@ namespace voice2text
         ///用于监控，结束另外2个线程
         private Thread session_monitor;
       
+     
+        /// <summary>
+        /// 环境声音监控
+        /// </summary>
+        private AudioAction voice_Monitor;
+
+        string res;
 
 
-
-      
-        AudioAction vMonitor;
         /// <summary>
         /// 主监控，控制指令识别开始
         /// </summary>
@@ -37,12 +41,15 @@ namespace voice2text
         {
 
 
-            MSPLogin();
+            MSPLogin(); //登录，所有的开始
 
 
-            VoiceMonitor();
+            ///创建监控
+            voice_Monitor = voice_Monitor = new AudioAction();
+            voice_Monitor.initMonitor();
+            voice_Monitor.StartMonitoringHandler(); //自带线程
 
-           
+
 
             ///捕获到条件，开始传送数据
             while (true)
@@ -53,16 +60,15 @@ namespace voice2text
                 //   Console.WriteLine(Config.start);
                 if (Config.isSpeeking)
                 {
-                    vMonitor.StopMonitoring();
+                    voice_Monitor.StopMonitoring();
                     //    vMonitor.StopMonitoring();
                     Config.isSpeeking = false;
 
-                  
-
-                    ///开启
+                 
+                    ///开启连续语音识别
                     StartSession_IAT();
 
-                    ///开启监控本次Session结束
+                    ///开启监控本次Session
                     session_monitor = new Thread(new ThreadStart(SessionMonitor));
                     session_monitor.Start();
                 }
@@ -78,80 +84,61 @@ namespace voice2text
             MSCDll.MSPLogout();
         }
 
-        public void VoiceMonitor()
-        {
-            vMonitor = vMonitor = new AudioAction();
-            vMonitor.initMonitor();
-            vMonitor.StartMonitoringHandler();
-
-         //   voice_monitor = new Thread(new ThreadStart(vMonitor.StartMonitoringHandler));
-
-         //   voice_monitor.Start();
-          
-    }
-        string res;
+      
         /// <summary>
         /// 用于结束本次会话，同时让主线程继续循环
         /// </summary>
         public void SessionMonitor()
         {
-
-            
+         
             while (true)
             {
-                Thread.Sleep(500); //每1000ms监控一次 ，这里要注意，防止数据还未获取完就结束线程！
-                if(msc!=null)
-                res = msc.getNowResult();
+                Thread.Sleep(500); //每500ms监控一次 ，这里要注意，防止数据还未获取完就结束线程！
+
+                if (msc!=null)  res = msc.getNowResult();
 
              //   Console.WriteLine(Util.getNowTime() + " 获取结果：" + res);
                 int status = msc.getNowEp_status();
 
+                ///msc ,audio 都不为空为连续语音识别情况（IAT）
                 if (msc != null && audio != null)
                 {
                     if (status == 3)
                     {
-
                         StopSession_IAT();
                         Console.WriteLine(Util.getNowTime() + " 端点结束" + res);
+                    
+                        Console.WriteLine("数据不合格！请再次尝试");                    
 
+                        Thread.Sleep(100);
+                        voice_Monitor.StartMonitoringHandler();
                       
-                        Console.WriteLine("数据不合格！");
-                        //   StartSession_ASR();
-
-
-                        Thread.Sleep(200);
-                        vMonitor.StartMonitoringHandler();
-                        //  VoiceMonitor();
                         session_monitor.Abort();///结束本身线程
                     }
 
-                    if (res.Length > 6)
+                    if (res.Length > 6) //这里验证连续语音识别结束条件
                     {
                         StopSession_IAT();
 
                         Console.WriteLine(Util.getNowTime() + " 输入数据值达到上限，结束本次会话，最后结果为：" + res);
 
-                        Console.WriteLine("再次验证开始！");
+                        Console.WriteLine("ASR再次验证开始！");
                         StartSession_ASR();
-
-
-                        //  Thread.Sleep(100000);
 
 
                     }
                 }
-                if(msc != null && audio == null)
+                if(msc != null && audio == null) ///这里为ASR情况的验证结束
                 {
                     if (msc.getNowResultStatus() == 1)
                     {
-                        Console.WriteLine("再次验证结束！");
+                      
                         StopSession_ASR();
+                        Console.WriteLine("再次验证结束！");
 
-                   
-             
                         Thread.Sleep(200);
-                        vMonitor.StartMonitoringHandler();
-                        //  VoiceMonitor();
+                        voice_Monitor.StartMonitoringHandler(); ///再次开启环境监听
+                      
                         session_monitor.Abort();///结束本身线程
 
 
@@ -160,7 +147,6 @@ namespace voice2text
 
             }
 
-
         }
 
 
@@ -168,6 +154,9 @@ namespace voice2text
     
         private string outputPath = "";
 
+        /// <summary>
+        /// 连续语音识别开始
+        /// </summary>
         private void StartSession_IAT()
         {
 
@@ -183,30 +172,27 @@ namespace voice2text
 
             //录音，上传
             audio.StartRecordingHandler();
-            //   audio_record = new Thread(new ThreadStart(audio.StartRecordingHandler));
 
             //获取结果
             msc_result = new Thread(new ThreadStart(msc.getResultHandler));
-
-      
-
-        //    audio_record.Start();
+    
             msc_result.Start();
           
 
         }
 
         
-
+        /// <summary>
+        /// 连续语音识别结束
+        /// </summary>
         private void StopSession_IAT()
         {
 
-        
             msc_result.Abort();
 
             audio.StopRecording();
             msc.SessionEnd();
-        //    MSCDll.MSPLogout();
+     
 
             audio = null;
             msc = null;
@@ -221,28 +207,30 @@ namespace voice2text
         public void StartSession_ASR()
         {
             msc = new MSCAction();
+
             msc.UploadData(@"..\res\keynumber2.abnf");
             //  msc.UploadData(@"C:\Users\admin\Desktop\xunfei\abnf\keynumber2.abnf");
 
             Console.WriteLine("msc.getGrammarList_temp() is "+ msc.getGrammarList_temp());
-          //  string param = "sub = asr, result_type = plain, sample_rate = 16000,aue = speex-wb,ent=sms16k";
+            //  string param = "sub = asr, result_type = plain, sample_rate = 16000,aue = speex-wb,ent=sms16k";
+
             msc.SessionBegin(msc.getGrammarList_temp(),Config.PARAMS_SESSION_ASR);
 
             Console.WriteLine("文件地址为："+ outputPath);
             ///设置文件地址
             msc.SetINFILE(outputPath);
-
-          
+   
             msc_Uploadfile = new Thread(new ThreadStart(msc.AudioWriteFile));
             msc_Uploadfile.Start();
  
-
             ///获取结果
             msc_result = new Thread(new ThreadStart(msc.getResultHandler));
             msc_result.Start();
 
         }
-
+        /// <summary>
+        /// 语义识别结束
+        /// </summary>
         private void StopSession_ASR()
         {
 
@@ -254,9 +242,6 @@ namespace voice2text
             msc = null;
 
         }
-
-
-
 
         /// <summary>
         /// 全局监控开始调用登录
