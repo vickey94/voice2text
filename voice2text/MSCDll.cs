@@ -82,5 +82,8 @@ namespace voice2text
         /// </summary>
         [DllImport("msc.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern int MSPLogout();
+
+
     }
+  
 }
