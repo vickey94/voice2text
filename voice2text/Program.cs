@@ -1,25 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Forms;
+
 
 namespace voice2text
 {
     class Program
     {
+        /// <summary>
+        /// 应用程序的主入口点。
+        /// </summary>  
+        [STAThread]
         static void Main(string[] args)
         {
 
-              ActionListener AL = new ActionListener();
-              AL.Monitor();
+
+              
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Mainform());
+       
+        //      ActionListener AL = new ActionListener();
+        //         AL.Monitor();
         //    AL.VoiceMonitor();
         //    Console.ReadKey();
 
 
-        }
+    }
 
 
 

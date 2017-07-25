@@ -41,7 +41,7 @@ namespace voice2text
         {
 
 
-            MSPLogin(); //登录，所有的开始
+            Util.MSPLogin(); //登录，所有的开始
 
 
             ///创建监控
@@ -243,15 +243,6 @@ namespace voice2text
 
         }
 
-        /// <summary>
-        /// 全局监控开始调用登录
-        /// </summary>
-        private void MSPLogin()
-        {
-            //使用其他接口前必须先调用MSPLogin，可以在应用程序启动时调用。
-            int ret = MSCDll.MSPLogin(null, null, Config.PARAMS_LOGIN);
-            if (ret == 0) Console.WriteLine(Util.getNowTime() + " 讯飞语音会话登录成功！");
-            else throw new Exception("MSPLogin失败 errCode=" + ret);
-        }
+
     }
 }

@@ -61,6 +61,9 @@ namespace voice2text.action
             //waveIn.RecordingStopped += OnRecordingStopped; 
         }
 
+        public Mainform MForm;
+        public void setMForm(Mainform m) { this.MForm = m; }
+
         ///<summary>
         ///开始录音 需要一个线程
         ///</summary>
@@ -71,9 +74,11 @@ namespace voice2text.action
             waveIn.StartRecording();
 
             Console.WriteLine("正在录音......");
+         
         }
 
-   
+  
+
         ///<summary>
         ///录音数据输出
         ///</summary>
@@ -83,20 +88,6 @@ namespace voice2text.action
 
             int length = e.BytesRecorded;
 
-            /*   if (Config.advDataList != null)
-               {
-
-                   for (int i = 0; i < Config.advDataList.Count; i++)
-                   {
-
-                       temp_waveBuffer = (byte[])Config.advDataList[i];
-                          waveWriter.Write(temp_waveBuffer, 0, length);
-                       if (msc != null) msc.AudioWrite(temp_waveBuffer);
-                    
-                   }
-
-                   Config.advDataList = null;
-               }*/
 
             if (Config.advData1 != null)
             {
@@ -119,6 +110,16 @@ namespace voice2text.action
                 waveWriter.Write(temp_waveBuffer, 0, e.BytesRecorded);
                 if (msc != null) msc.AudioWrite(temp_waveBuffer);
 
+
+
+            long sh = System.BitConverter.ToInt64(temp_waveBuffer, 0);
+
+            long width = (long)Math.Pow(2, 50);
+            float svolume = Math.Abs(sh / width);
+              if (svolume > 1500.0f) { svolume = 1500.0f; }
+
+            svolume = svolume / 15.0f;
+            MForm.setProgressBar((int)svolume);
             //  int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);//录音时间获取 
         }
 
