@@ -41,7 +41,7 @@ namespace voice2text
         {
 
 
-            Util.MSPLogin(); //登录，所有的开始
+          //  Util.MSPLogin(); //登录，所有的开始
 
 
             ///创建监控
@@ -166,6 +166,8 @@ namespace voice2text
             msc.SessionBegin(null,Config.PARAMS_SESSION_IAT);
 
             audio = new AudioAction();
+
+         
             audio.init(msc);
 
             outputPath = audio.outputPath; //获取本次文件地址

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
-
+using voice2text.action;
 
 namespace voice2text
 {
@@ -13,7 +13,7 @@ namespace voice2text
         static void Main(string[] args)
         {
 
-
+        
               
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

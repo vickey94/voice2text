@@ -37,32 +37,35 @@ namespace voice2text
         /// <summary>
         /// 文件输出文件夹
         /// </summary>
-        public static readonly string outputFolder = "D:";
+        public static string outputFolder = "D:";
+
+
+        public static string outputTXT = "识别记录.txt";
 
         /// <summary>
         /// 上传语音文件地址
         /// </summary>
         public static readonly string uploadDataFile = "";
 
+
+
+
         public static  bool isSpeeking = false;
 
 
-        /*       public static ArrayList advDataList = null;
 
-                public static void setAdvData(byte[] temp)
-                {
-                    if (advDataList == null) advDataList = new ArrayList();
-
-                    if (advDataList.Count > 1) advDataList.Remove(0);
-
-                    advDataList.Add(temp);
-
-                }
-  */
         /// <summary>
         /// 用于提前存储数据，2个单位的存储理论上够用，这里建议不要用List之类的，因为这里要求处理器在10ms内发出去数据和硬盘写出数据，如果使用List,或单位过大，容易出错
         /// </summary>
         public static byte[] advData1 = null;
         public static byte[] advData2 = null;
+
+
+
+
+        ////////////////////////////////////////////
+        ///
+        /////////////////////////////////////////////
+       
     }
 }

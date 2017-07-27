@@ -44,25 +44,24 @@ namespace voice2text.action
         {
             this.msc = msc;
 
-            string outputFilename = Util.getNowTime() + ".wav";
-           // outputPath = Path.Combine(Config.outputFolder, outputFilename);
-            outputPath = Config.outputFolder + "\\" + outputFilename;
+              string outputFilename = Util.getNowTime() + ".wav";
+            // outputPath = Path.Combine(Config.outputFolder, outputFilename);
+                outputPath = Config.outputFolder + "\\" + outputFilename;
 
           
             waveIn = new WaveInEvent();
             waveIn.WaveFormat = new WaveFormat(16000, 16, 1); //
 
             waveWriter = new WaveFileWriter(outputPath, waveIn.WaveFormat);
-            
+
             waveIn.DataAvailable += OnDataAvailable;
-            
+
 
             //这个地方可以重写stop,但我们的只要waveIn.Dispose()关闭清空数据就可以，所有并没有重写
             //waveIn.RecordingStopped += OnRecordingStopped; 
         }
 
-        public Mainform MForm;
-        public void setMForm(Mainform m) { this.MForm = m; }
+ 
 
         ///<summary>
         ///开始录音 需要一个线程
@@ -110,16 +109,6 @@ namespace voice2text.action
                 waveWriter.Write(temp_waveBuffer, 0, e.BytesRecorded);
                 if (msc != null) msc.AudioWrite(temp_waveBuffer);
 
-
-
-            long sh = System.BitConverter.ToInt64(temp_waveBuffer, 0);
-
-            long width = (long)Math.Pow(2, 50);
-            float svolume = Math.Abs(sh / width);
-              if (svolume > 1500.0f) { svolume = 1500.0f; }
-
-            svolume = svolume / 15.0f;
-            MForm.setProgressBar((int)svolume);
             //  int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);//录音时间获取 
         }
 
@@ -230,7 +219,71 @@ namespace voice2text.action
                 else Config.advData2 = Config.advData1 = temp;
             }
         }
-       
+
+
+
+        //////////////////////////////////////////////////////////
+        /////////////////下面部分为重写用于界面//////////////////
+
+
+        /// <summary>
+        /// 设置本次参数，传递MSC,如果为NULL，则只为录音
+        /// </summary>
+        public void init(MSCAction msc, string outputPath,Mainform mform)
+        {
+            this.msc = msc;
+            this.mform = mform;
+            this.outputPath = outputPath;
+            waveIn = new WaveInEvent();
+            waveIn.WaveFormat = new WaveFormat(16000, 16, 1); //
+
+            waveWriter = new WaveFileWriter(outputPath, waveIn.WaveFormat);
+
+            waveIn.DataAvailable += OnDataAvailableForm;
+
+        }
+
+       private Mainform mform;
+
+        private void OnDataAvailableForm(object sender, WaveInEventArgs e)
+        {
+            byte[] temp_waveBuffer = null;
+
+            int length = e.BytesRecorded;
+
+
+            if (Config.advData1 != null)
+            {
+                Console.WriteLine("预录音数据传输");
+
+                temp_waveBuffer = Config.advData1;
+                waveWriter.Write(temp_waveBuffer, 0, length);
+                if (msc != null) msc.AudioWrite(temp_waveBuffer);
+
+                temp_waveBuffer = Config.advData2;
+                waveWriter.Write(temp_waveBuffer, 0, length);
+                if (msc != null) msc.AudioWrite(temp_waveBuffer);
+
+                Config.advData1 = null;
+                Config.advData2 = null;
+            }
+
+            temp_waveBuffer = e.Buffer;
+
+            waveWriter.Write(temp_waveBuffer, 0, e.BytesRecorded);
+            if (msc != null) msc.AudioWrite(temp_waveBuffer);
+
+            long sh = System.BitConverter.ToInt64(temp_waveBuffer, 0);
+
+            long width = (long)Math.Pow(2, 50);
+            float svolume = Math.Abs(sh / width);
+            if (svolume > 1500.0f) { svolume = 1500.0f; }
+
+            svolume = svolume / 15.0f;
+            mform.setProgressBar((int)svolume);
+            Console.WriteLine(svolume);
+            //  int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);//录音时间获取 
+        }
 
     }
 }
