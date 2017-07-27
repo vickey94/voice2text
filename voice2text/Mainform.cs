@@ -70,6 +70,8 @@ namespace voice2text
             msc.SetINFILE(outputPath);
 
             msc.AudioWriteFile();
+
+
             msc.getResultHandler();
 
             
