@@ -233,7 +233,7 @@ namespace voice2text.action
         {
             this.msc = msc;
             this.mform = mform;
-            this.outputPath = outputPath;
+        //    this.outputPath = outputPath;
             waveIn = new WaveInEvent();
             waveIn.WaveFormat = new WaveFormat(16000, 16, 1); //
 

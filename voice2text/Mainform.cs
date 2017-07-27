@@ -57,13 +57,21 @@ namespace voice2text
         {
           
             ///本次输出文件夹          
-            Config.outputFolder = "D:\\" + Util.getNowTime();
+            Config.outputFolder = Config.outputFolder +"\\" + Util.getNowTime();
 
             if (Directory.Exists((Config.outputFolder)) == false)//如果不存在就创建文件夹
             {
                 Directory.CreateDirectory(Config.outputFolder);   //本次文件夹
-                File.Create(Config.outputFolder + "\\" + Config.outputTXT).Close(); //本次语音记录
-                Directory.CreateDirectory(Config.outputFolder + "\\wav");  //本次语音文件
+              
+                //训练文件夹
+                Directory.CreateDirectory(Config.outputFolder + "\\train\\wav");  //本次语音文件          
+                File.Create(Config.outputFolder + "\\train\\" + Config.outputTXT).Close(); //本次语音记录
+
+
+                //识别文件夹
+                Directory.CreateDirectory(Config.outputFolder + "\\run\\wav");
+                File.Create(Config.outputFolder + "\\run\\" + Config.outputTXT).Close(); 
+               
             }
 
             Util.MSPLogin(); //登录
@@ -86,7 +94,7 @@ namespace voice2text
             train.setTime(Util.getNowTime());
 
             msc.SessionBegin(null, Config.PARAMS_SESSION_IAT);
-            audio.init(null, Config.outputFolder + "\\wav\\" + train.getTime() + ".wav", this);
+            audio.init(null,train.getTrainPath_txt(), this);
 
             audio.StartRecordingHandler();
         }
@@ -101,7 +109,7 @@ namespace voice2text
 
             audio.StopRecording();
 
-            msc.SetINFILE(Config.outputFolder + "\\wav\\" + train.getTime() + ".wav");
+            msc.SetINFILE(train.getTrainPath_wav());
 
             //此处要考虑线程问题
             msc.AudioWriteFile();
@@ -116,8 +124,7 @@ namespace voice2text
             {
                 if (exp.Message == "QISRAudioWrite err,errCode=10118")
                 {
-                    text = "录音效果不好，请再次尝试\n";
-                 
+                    text = "录音效果不好，请再次尝试\n";   
                 }
             }
             finally
@@ -128,28 +135,16 @@ namespace voice2text
                 richTextBox1.ScrollToCaret();
                 train.setId(textBox1.Text);
                 train.setText(text);
-                Write2TXT(train.getWriteText());
+                Util.Write2TXT(train.getTrainPath_txt(),train.getWriteText());
                 setProgressBar(0);
             }
-           
-
+          
         }
-
-        private void Write2TXT(string text)
-        {
-            FileStream fs = new FileStream(Config.outputFolder + "\\" + Config.outputTXT, FileMode.Append);
-            //获得字节数组
-            byte[] data = Encoding.UTF8.GetBytes(text + "\r\n");
-            //开始写入
-            fs.Write(data, 0, data.Length);
-            //清空缓冲区、关闭流
-            fs.Flush();
-            fs.Close();
-        }
+      
 
         private void button2_Click(object sender, EventArgs e)
         {
-            ActionListener AL = new ActionListener();
+            ActionListener AL = new ActionListener(this);
                    AL.Monitor();
           
         }

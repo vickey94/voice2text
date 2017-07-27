@@ -75,6 +75,7 @@
     <Compile Include="Mainform.Designer.cs">
       <DependentUpon>Mainform.cs</DependentUpon>
     </Compile>
+    <Compile Include="model\Auth.cs" />
     <Compile Include="model\Train.cs" />
     <Compile Include="MSCDll.cs" />
     <Compile Include="Program.cs" />

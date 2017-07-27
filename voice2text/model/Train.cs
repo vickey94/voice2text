@@ -40,6 +40,10 @@ namespace voice2text.model
         public void setId(string id) { this.id = id; }
         public void setText(string text) { this.text = text; }
 
-        public string getTime() { return time; }
+     //   public string getTime() { return time; }
+
+        public string getTrainPath_wav() { return Config.outputFolder + "\\train\\wav\\" + time + ".wav"; }
+        public string getTrainPath_txt() { return Config.outputFolder + "\\train\\" + Config.outputTXT; }
+
     }
 }

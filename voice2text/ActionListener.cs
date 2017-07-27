@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using voice2text.action;
+using voice2text.model;
 
 namespace voice2text
 {
@@ -11,9 +12,12 @@ namespace voice2text
     /// </summary>
     class ActionListener
     {
+        private Mainform mform;
 
         private AudioAction audio;
         private MSCAction msc;
+
+        private Auth auth; ///保存维持一次运行中的语音识别信息
 
 
 
@@ -33,7 +37,7 @@ namespace voice2text
 
         string res;
 
-
+        public ActionListener(Mainform mform) { this.mform = mform; }
         /// <summary>
         /// 主监控，控制指令识别开始
         /// </summary>
@@ -55,7 +59,7 @@ namespace voice2text
             while (true)
             {
 
-                Thread.Sleep(10);
+                Thread.Sleep(50);
               
                 //   Console.WriteLine(Config.start);
                 if (Config.isSpeeking)
@@ -90,10 +94,24 @@ namespace voice2text
         /// </summary>
         public void SessionMonitor()
         {
-         
+            int i = 0;
             while (true)
             {
-                Thread.Sleep(500); //每500ms监控一次 ，这里要注意，防止数据还未获取完就结束线程！
+                i++;
+                if (i > 5)
+                { StopSession_IAT();
+                    Console.WriteLine(Util.getNowTime() + " 端点结束" + res);
+
+                    Console.WriteLine("数据不合格！请再次尝试");
+
+                    Thread.Sleep(100);
+                    voice_Monitor.StartMonitoringHandler();
+
+                    session_monitor.Abort();///结束本身线程
+
+                }
+
+                    Thread.Sleep(500); //每500ms监控一次 ，这里要注意，防止数据还未获取完就结束线程！
 
                 if (msc!=null)  res = msc.getNowResult();
 
@@ -152,13 +170,15 @@ namespace voice2text
 
 
     
-        private string outputPath = "";
+     //   private string outputPath = "";
 
         /// <summary>
         /// 连续语音识别开始
         /// </summary>
         private void StartSession_IAT()
         {
+            auth = new Auth();
+            auth.setTime(Util.getNowTime());
 
             msc = new MSCAction();
 
@@ -168,9 +188,9 @@ namespace voice2text
             audio = new AudioAction();
 
          
-            audio.init(msc);
+            audio.init(msc, auth.getRunPath_wav(),mform);
 
-            outputPath = audio.outputPath; //获取本次文件地址
+       //    outputPath = audio.outputPath; //获取本次文件地址
 
             //录音，上传
             audio.StartRecordingHandler();
@@ -208,6 +228,8 @@ namespace voice2text
         /// </summary>
         public void StartSession_ASR()
         {
+
+         
             msc = new MSCAction();
 
             msc.UploadData(@"..\res\keynumber2.abnf");
@@ -218,9 +240,9 @@ namespace voice2text
 
             msc.SessionBegin(msc.getGrammarList_temp(),Config.PARAMS_SESSION_ASR);
 
-            Console.WriteLine("文件地址为："+ outputPath);
+            Console.WriteLine("文件地址为："+auth.getRunPath_wav());
             ///设置文件地址
-            msc.SetINFILE(outputPath);
+            msc.SetINFILE(auth.getRunPath_wav());
    
             msc_Uploadfile = new Thread(new ThreadStart(msc.AudioWriteFile));
             msc_Uploadfile.Start();
@@ -235,14 +257,14 @@ namespace voice2text
         /// </summary>
         private void StopSession_ASR()
         {
-
+          
             msc_Uploadfile.Abort();
             msc_result.Abort();
          
             msc.SessionEnd();     
  
             msc = null;
-
+            auth = null;
         }
 
 

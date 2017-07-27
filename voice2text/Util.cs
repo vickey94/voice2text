@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -47,6 +48,23 @@ namespace voice2text
             int ret = MSCDll.MSPLogin(null, null, Config.PARAMS_LOGIN);
             if (ret == 0) Console.WriteLine(Util.getNowTime() + " 讯飞语音会话登录成功！");
             else throw new Exception("MSPLogin失败 errCode=" + ret);
+        }
+
+        /// <summary>
+        /// 文本输出
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="text"></param>
+        public static void Write2TXT(string path, string text)
+        {
+            FileStream fs = new FileStream(path, FileMode.Append);
+            //获得字节数组
+            byte[] data = Encoding.UTF8.GetBytes(text + "\r\n");
+            //开始写入
+            fs.Write(data, 0, data.Length);
+            //清空缓冲区、关闭流
+            fs.Flush();
+            fs.Close();
         }
     }
 }
